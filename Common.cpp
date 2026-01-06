@@ -1,18 +1,18 @@
 #include "COMMON.H"
-
+#pragma warning (disable:4996)
 extern char DosMes[MAX_PATH * 2];
 
-//äøéöÇÃ1 ﬁ≤ƒñ⁄
+//Êº¢Â≠ó„ÅÆ1ÔæäÔæûÔΩ≤ÔæÑÁõÆ
 #define ISKANJI(X) ((((unsigned char)(X)>=0x81)&&((unsigned char)(X)<=0x9F))||(((unsigned char)(X)>=0xE0)&&((unsigned char)(X)<=0xFC)))
 static int KanjiFirst(char ch) { return (ISKANJI(ch)); }
-//äøéöÇÃ2 ﬁ≤ƒñ⁄
+//Êº¢Â≠ó„ÅÆ2ÔæäÔæûÔΩ≤ÔæÑÁõÆ
 bool KanjiSecond(char* buf, char* chr) {
 	int idx, len;
 	if (((len = (int)(chr - buf)) == 0) || len >= strlen(buf) || !KanjiFirst(*(chr - 1))) { return(false); }
 	for (idx = 0; idx < len; ) { (KanjiFirst(buf[idx])) ? idx += 2 : idx++; }
 	return((chr == buf + idx) ? false : true);
 }
-// ﬂΩÇ™ë∂ç›ÇµÇ»Ç¢èÍçáÇÕ√ﬁ®⁄∏ƒÿçÏê¨
+//ÔæäÔæüÔΩΩ„ÅåÂ≠òÂú®„Åó„Å™„ÅÑÂ†¥Âêà„ÅØÔæÉÔæûÔΩ®ÔæöÔΩ∏ÔæÑÔæò‰ΩúÊàê
 static char *GetWord(char* in_str, char* out_str, const char* split_str, int max_str) {
 	static char DLM[] = { CMM,SPC,TAB,CR,LF,0x00 };
 	int idx, idy, idz;
@@ -38,7 +38,7 @@ void MakeDir(const char *path) {
 	char *ptr;
 	char str[_MAX_PATH*2] = { "" };
 	char dir[_MAX_PATH*2];
-    //ë∂ç›Ç∑ÇÈèÍçáÇÕ ﬂΩ
+    //Â≠òÂú®„Åô„ÇãÂ†¥Âêà„ÅØÔæäÔæüÔΩΩ
 	if (_access_s(path, 00) == 0) { return; }
 	ptr = (char*)path;
 	for (ix=0; ((ptr = GetWord(ptr, dir, ":\\", _MAX_PATH*2)) != 0x00); ix++) {
@@ -61,8 +61,7 @@ void MakeDir(const char *path) {
 		}
 	}
 }
-// ﬂΩñºÇ©ÇÁÃß≤ŸñºÇéÊìæ
-#pragma warning (disable:4996)
+//ÔæäÔæüÔΩΩÂêç„Åã„ÇâÔæåÔΩßÔΩ≤ÔæôÂêç„ÇíÂèñÂæó
 char *StrRChr(char* buf, char chr) {
 	int  idx;
 	char* ptr = 0x00;
@@ -106,55 +105,9 @@ char *AddCma(__int64 num) {
 	if (minus == true) { SftStr(str, 1); str[0] = '-'; }
 	return(str);
 }
-int Path_Len = 0;
-bool FileCopy(char* iFile, char* oFile, char* buf, long long size) {
-	int ifd = -1, ofd = -1, len = 0, rcd = 0;
-	struct _stat64 ist = { 0 };
-	struct _stat64 ost = { 0 };
-	__int64 SumSize = 0;
-
-	//DOS MESSAGE
-	char *file_name = GetFileName(iFile);
-	ClsLine(5,13,Path_Len);
-	ClsLine(6,2,15);
-	sprintf_s(DosMes,sizeof(DosMes), "FILENAME = %s",file_name);
-	ScrWrite(5,2,DosMes);
-	Path_Len = (int)strlen(file_name)*2;
-
-	// çXêVéûä‘Ç∆ÉTÉCÉYÇ™ìØÇ∂Ç»ÇÁï°é ÇµÇ»Ç¢
-	if (_stat64(iFile, &ist) == 0 && _stat64(oFile, &ost) == 0) {
-		if (ist.st_mtime == ost.st_mtime && ist.st_size == ost.st_size) {
-			ScrWrite(6,2,"ALREADY COPIED!");
-			return false;
-		}
-	}
-	struct __utimbuf64 ut = { 0 }; // èâä˙âª
-	ut.actime  = ist.st_atime;     // ç≈èIÉAÉNÉZÉXéûçè
-	ut.modtime = ist.st_mtime;     // ç≈èIçXêVéûçè
-
-	if ((ifd = RD_OPEN(iFile)) < 0) { return false; }
-	if ((ofd = WR_OPEN(oFile)) < 0) { close(ifd); return false; }
-	while ((len = read(ifd, buf, (unsigned int)size)) > 0) {
-		SumSize += len;
-		rcd = write(ofd, buf, len);
-		//DOS MESSAGE êiíªï\é¶
-		ClsLine(6,2,15);
-		sprintf_s(DosMes, sizeof(DosMes), "%lld %%",(long long)((double)SumSize / ist.st_size * 100));
-		ScrWrite(6,2,DosMes);
-	}
-	close(ifd);
-	close(ofd);
-	//çXêVéûä‘ê›íË
-	_utime64(oFile, &ut);
-
-	//DOS MESSAGE êiíªï\é¶
-	ClsLine(6, 2, 15);
-	ScrWrite(6,2,"100 %");
-	return true;
-}
 static void SetCur(int line, int column) {
 	static HANDLE HStdOut = 0x00;
-	if (line   < 1) { line   = 1; }
+	if (line < 1) { line = 1; }
 	if (column < 1) { column = 1; }
 	COORD pos;
 	pos.Y = (short)line - 1;
@@ -163,7 +116,7 @@ static void SetCur(int line, int column) {
 	SetConsoleCursorPosition(HStdOut, pos);
 }
 void ScrWrite(int line, int column, const char* str) {
-	char w_buf[_MAX_PATH*2];
+	char w_buf[_MAX_PATH * 2];
 	char* ptr;
 	strcpy(w_buf, str);
 	if ((ptr = (char*)strchr(w_buf, '\r')) != 0x00) { *ptr = 0x00; }
@@ -174,7 +127,146 @@ void ScrWrite(int line, int column, const char* str) {
 	ShowCursor(true);
 }
 void ClsLine(int line, int column, int len) {
-	for (int ix=1; ix < len; ix++) {
-		ScrWrite(line,column+ix-1," ");
+	for (int ix = 1; ix < len; ix++) {
+		ScrWrite(line, column + ix - 1, " ");
 	}
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// „Éï„Ç°„Ç§„É´Ë§áÂÜô
+int Path_Len = 0;
+bool GetSectorSize(const char* filePath, DWORD& sectorSize) {
+	if (!filePath || strlen(filePath) < 2 || filePath[1] != ':') { printf("Invalid file path\n"); return false; }
+	char rootPath[4] = { filePath[0], ':', '\\', '\0' };
+	DWORD sectorsPerCluster, bytesPerSector, freeClusters, totalClusters;
+	if (!GetDiskFreeSpaceA(rootPath, &sectorsPerCluster, &bytesPerSector,&freeClusters,&totalClusters)) {
+		return false;
+	}
+	sectorSize = bytesPerSector;
+	return true;
+}
+
+bool FileCopy(char *iFile,char *oFile) {
+	struct _stat64 ist = { 0 };
+	struct _stat64 ost = { 0 };
+	HANDLE hSrc;
+	HANDLE hDst;
+	DWORD         isector = 0;
+	FILETIME      ftime;
+	LARGE_INTEGER fsize;
+
+	BYTE    *buffer   = 0x00;
+	LONGLONG fullsize = 0;
+	LONGLONG copied   = 0;
+	LONGLONG tailsize = 0;
+	size_t   alignsize= 0;
+	size_t   base_buf = 4 * 1024 * 1024; //4MB
+
+	//‚òÖDOS MESSAGE
+	_stat64(iFile, &ist);
+	ClsLine(5, 13, Path_Len);
+	ClsLine(6, 13, 16);
+	ClsLine(7, 2, 16); //"ALREADY COPIED!" Clear
+	char* file_name = GetFileName(iFile);
+	ScrWrite(5, 13, file_name);
+	Path_Len = (int)strlen(file_name) + 1;
+	ScrWrite(6, 13, AddCma(ist.st_size));
+
+	//Âêå‰∏ÄÔæåÔΩßÔΩ≤Ôæô„ÅØÁÑ°Ë¶ñ
+	if (_stat64(oFile, &ost) == 0) {
+		if (ist.st_mtime == ost.st_mtime && ist.st_size == ost.st_size) {
+			//‚òÖDOS MESSAGE
+			ScrWrite(7,2,"ALREADY COPIED!");
+			return false;
+		}
+	}
+	if (isalpha(oFile[0]) && oFile[1]==':' && oFile[2] == '\\') {
+		ULARGE_INTEGER FreeByte;
+		ULARGE_INTEGER TotalByte;
+		ULARGE_INTEGER NumberFreeByte;
+		char   drive[4] = {0};
+		memcpy(drive,oFile,3); drive[3] = 0x00;
+		GetDiskFreeSpaceEx(drive, &FreeByte, &TotalByte, &NumberFreeByte);
+		if (FreeByte.QuadPart < (ULONGLONG)ist.st_size) {
+			ScrWrite(7, 2, "DISK SPACE ERR!");
+			return false;
+		}
+	}
+	//ÂÖ•ÂäõÔæåÔΩßÔΩ≤ÔæôÔΩµÔΩ∞ÔæåÔæüÔæù
+	if ((hSrc = CreateFileA(iFile,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL)) == INVALID_HANDLE_VALUE) { 
+		return false; 
+	}
+	GetFileTime(hSrc,NULL,NULL,&ftime);
+	GetFileSizeEx(hSrc, &fsize);
+
+	//Âá∫ÂäõÔæåÔΩßÔΩ≤ÔæôÔΩµÔΩ∞ÔæåÔæüÔæù
+	if ((hDst = CreateFileA(oFile,GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_FLAG_NO_BUFFERING|FILE_FLAG_SEQUENTIAL_SCAN,NULL)) == INVALID_HANDLE_VALUE) {	
+		CloseHandle(hSrc); 
+		return false; 
+	}
+
+	//ÈùûÔæäÔæûÔΩØÔæåÔΩßÔæòÔæùÔΩ∏ÔæûÔΩªÔΩ≤ÔΩΩÔæû„Å®ÔæäÔæûÔΩØÔæåÔΩßÁ¢∫‰øù
+	if (!GetSectorSize(iFile, isector)) { 
+		CloseHandle(hSrc); 
+		CloseHandle(hDst); 
+		return false; 
+	}
+	fullsize =(fsize.QuadPart / isector) * isector;
+	tailsize = fsize.QuadPart - fullsize;
+	alignsize = (base_buf / isector) * isector;
+	if (alignsize == 0) { alignsize = isector; }
+	if ((buffer = (BYTE*)_aligned_malloc(alignsize,isector))==0x00) {
+		CloseHandle(hSrc);
+		CloseHandle(hDst);
+		return false;
+	}
+
+	//Ë§áÂÜô
+	while (copied < fullsize) {
+		DWORD to_read = (DWORD)std::min((LONGLONG)alignsize,fullsize - copied);
+		DWORD byte_read = 0, byte_write = 0;
+
+		if (!ReadFile(hSrc,buffer,to_read,&byte_read,NULL)) { break; }
+		if (byte_read == 0) { break; }
+
+		if (!WriteFile(hDst,buffer,byte_read, &byte_write, NULL)) { break; }
+		copied += byte_read;
+
+		//‚òÖDOS MESSAGE ÈÄ≤ÊçóË°®Á§∫
+		ClsLine  (7, 2, 8); //999.99 %
+		sprintf_s(DosMes, sizeof(DosMes), "%.2f %%", (double)copied / fsize.QuadPart * 100.00);
+		ScrWrite (7, 2, DosMes);
+	}
+	SetFileTime(hDst,NULL,NULL,&ftime);
+	CloseHandle(hDst);
+
+	// Êú´Â∞æÂá¶ÁêÜÔºàI/OÔºâ
+	if (tailsize > 0) {
+		LARGE_INTEGER pos;
+		pos.QuadPart = fullsize;
+		SetFilePointerEx(hSrc,pos,NULL,FILE_BEGIN);
+		std::vector<BYTE> tailBuf((size_t)tailsize);
+		DWORD bytesRead = 0;
+		if (!ReadFile(hSrc, tailBuf.data(), (DWORD)tailsize, &bytesRead, NULL)) {
+			CloseHandle(hSrc);
+			_aligned_free(buffer);
+			return false;
+		}
+		HANDLE hDstTail = CreateFileA(oFile,GENERIC_WRITE,0,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
+		SetFilePointerEx(hDstTail,pos,NULL,FILE_BEGIN);
+		DWORD bytesWritten = 0;
+		WriteFile  (hDstTail,tailBuf.data(),bytesRead,&bytesWritten,NULL);
+		SetFileTime(hDstTail,NULL,NULL,&ftime);
+		CloseHandle(hDstTail);
+		copied += bytesRead;
+	}
+	//‚òÖDOS MESSAGE ÈÄ≤ÊçóË°®Á§∫
+	ClsLine (7, 2, 8);
+	ScrWrite(7, 2, "100.00 %");
+
+	// Êõ¥Êñ∞Êó•ÊôÇ„ÇíÂ∑Æ„ÅóÊõø„Åà 
+	CloseHandle(hSrc);
+	//Ë≥áÊ∫êËß£Êîæ	
+	_aligned_free(buffer);
+
+	return true;
 }
