@@ -1,5 +1,5 @@
-﻿#include "COMMON.H"
-void xxCopy(char* iPath,char *oPath,char *buf,long long size);
+#include "COMMON.H"
+void xxCopy(char* iPath,char *oPath);
 char DosMes[MAX_PATH * 2];
 int  CopyCount = 0;
 
@@ -20,7 +20,11 @@ int main(int argc,char *argv[]) {
 	strcpy_s(iPath,sizeof(iPath),argv[1]);
 	if (strlen(iPath) == 2 && isalpha((unsigned char)iPath[0]) && iPath[1] == ':') {
 		strcat_s(iPath, sizeof(iPath), "\\");
+	} else 
+	if (iPath[strlen(iPath) - 1] == '\\') {
+		iPath[strlen(iPath) - 1] = 0x00;	
 	}
+
 	if ((rcd =_stat64(iPath,&ist)) != 0) {
 		if (rcd == ENOENT) {
 			printf("FROM_DIRECTORY[%s] DOES NOT EXIST.\n",iPath);     return(NG);
@@ -34,6 +38,9 @@ int main(int argc,char *argv[]) {
 	strcpy_s(oPath, sizeof(oPath), argv[2]);
 	if (strlen(oPath) == 2 && isalpha((unsigned char)oPath[0]) && oPath[1] == ':') {
 		strcat_s(oPath, sizeof(oPath), "\\");
+	} else
+	if (oPath[strlen(oPath) - 1] == '\\') {
+		oPath[strlen(oPath) - 1] = 0x00;
 	}
 	MakeDir(oPath);
 	if ((rcd = _stat64(oPath, &ost)) != 0) {
@@ -62,33 +69,34 @@ int main(int argc,char *argv[]) {
 	if (strlen(oPath) == ix) {
 		printf("FROM_DIRECTORY[%s] IS A SUBFOLDER OF THE TO_DIRECTORY(%s).\n", iPath, oPath); return(NG);
 	}
-    //XXCOPY START 
-	char *buf = NULL;
-	long long size = MEGA * 32; //32MB
-	if ((buf = (char*)malloc(size)) == NULL) {
-		printf("SYSTEM RESOURCES ARE EXHAUSTED.\n"); return(NG);
-	}
-	xxCopy(iPath,oPath,buf,size);
-	if (buf) { free(buf); }
+    //XXCOPY START
+	ScrWrite(5,2,"FILENAME = ");
+	ScrWrite(6,2,"FILESIZE = ");
+	xxCopy(iPath,oPath);
 
-	//DOS MESSAGE
-	sprintf_s(DosMes,"XXCOPY COUNT = %s\n",AddCma(CopyCount));
-	ScrWrite(8,2,DosMes);
+	//★DOS MESSAGE
+	ClsLine  (5,2,80);
+	ClsLine  (6,2,80);
+	ClsLine  (7,2,80);
+	sprintf_s(DosMes,"COPY FILE COUNT = %s\n",AddCma(CopyCount));
+	ScrWrite (5,2,DosMes);
 	return(OK);
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-void xxCopy(char *iPath,char *oPath,char *buf,long long size) {
+void xxCopy(char *iPath,char *oPath) {
 	WIN32_FIND_DATA fnd_dat;
 	HANDLE h_fnd;
 	char rPath[MAX_PATH*2];
 	char wPath[MAX_PATH*2];
 
-	//DOS MESSAGE
+	//★DOS MESSAGE
 	system("cls");
 	sprintf_s(DosMes, sizeof(DosMes), "FROM DIRECTORY = %s",iPath);
 	ScrWrite(2, 2, DosMes);
 	sprintf_s(DosMes, sizeof(DosMes), "TO   DIRECTORY = %s",oPath);
 	ScrWrite(3, 2, DosMes);
+	ScrWrite(5, 2, "FILENAME = ");
+	ScrWrite(6, 2, "FILESIZE = ");
 
 	strcpy_s(rPath,sizeof(rPath),iPath);
 	strcpy_s(wPath,sizeof(wPath),oPath);
@@ -117,9 +125,19 @@ void xxCopy(char *iPath,char *oPath,char *buf,long long size) {
 
 		if (fnd_dat.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 			MakeDir(wPath);
-			xxCopy(rPath,wPath,buf,size);
+			xxCopy(rPath,wPath);
+
+			//★DOS MESSAGE
+			system("cls");
+			sprintf_s(DosMes, sizeof(DosMes), "FROM DIRECTORY = %s", iPath);
+			ScrWrite(2, 2, DosMes);
+			sprintf_s(DosMes, sizeof(DosMes), "TO   DIRECTORY = %s", oPath);
+			ScrWrite(3, 2, DosMes);
+			ScrWrite(5, 2, "FILENAME = ");
+			ScrWrite(6, 2, "FILESIZE = ");
+
 		} else {
-			if (FileCopy(rPath, wPath, buf, size) == true) {
+			if (FileCopy(rPath, wPath) == true) {
 				CopyCount++;
 			}
 		}
